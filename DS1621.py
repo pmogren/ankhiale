@@ -278,31 +278,3 @@ def wake_up(bus, sensor):
     ''' Device always starts in Idle mode, first reading is not usable.'''
     read_degreesC_byte(bus, sensor)
     time.sleep(0.6)
-
-def main():
-    # just initialise what's on the bus, show settings and take a reading.
-
-    # must instantiate the bus.
-    # on RPi 256 MB version, it's called i2c_0
-    # on RPi 512 MB version, it's called i2c_1
-    # just for clarity, use those names
-    i2c_0 = smbus.SMBus(0)
-
-    # sensorname at bus address.
-    Room = 0x48
-
-    # First reading after startup is not usable, only wakes the devices up.
-    ds.wake_up(i2c_0, Room)
-
-    # show chip configuration
-    read_config(i2c_0, Room)
-
-    s = '''\n  Sensorname {}:
-    \tas integer: {}
-    \twith .5 resolution: {}
-    \thigh-res: {}'''
-
-    print s.format('Room', *read_degreesC_all_oneshot(i2c_0, Room))
-
-if __name__ == "__main__":
-    main()
