@@ -128,8 +128,8 @@ def main():
     while i < iterations:
         #readFunc returns an array: [degreesC_byte, degreesC_word, degreesC_HR]
         #WARN: High-Resolution reading is buggy, sometimes very inaccurate (way off from low-res readings)
-        heaterReading = readFunc(i2cBus, Heater)[1]
-        coolerReading = readFunc(i2cBus, Cooler)[1]
+        heaterReading = celsius_to_farenheit(readFunc(i2cBus, Heater)[1])
+        coolerReading = celsius_to_farenheit(readFunc(i2cBus, Cooler)[1])
         highTempAlarm = coolerReading > args.maxTemp
         lowTempAlarm = heaterReading < args.minTemp
 
@@ -137,17 +137,17 @@ def main():
         print '{}"Timestamp": "{}", "HeaterTemp": {}, "CoolerTemp": {}, "AverageTemp": {}, "TempUnit": {}, "HighTempAlarm": {}, "LowTempAlarm": {}{}'.format(
             "{",
             datetime.datetime.now().isoformat(),
-            celsius_to_farenheit(heaterReading),
-            celsius_to_farenheit(coolerReading),
-            celsius_to_farenheit(avgReading),
+            heaterReading,
+            coolerReading,
+            avgReading,
             "F",
             highTempAlarm,
             lowTempAlarm,
             "}")
 
-        if highTempAlarm:
+        if highTempAlarm and args.alarm:
             play_sound(args.highTempSound)
-        if lowTempAlarm:
+        if lowTempAlarm and args.alarm:
             play_sound(args.lowTempSound)
 
         i = i + 1
