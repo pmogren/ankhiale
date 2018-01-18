@@ -1,0 +1,14 @@
+[Unit]
+Description=Ankhiale Temperature Monitor
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/local/bin/ankhiale --configure --start oneshot --poll 300 --alarm
+StandardOutput=journal+console
+StandardError=journal+console
+SyslogIdentifier=ankhiale
+User=ankhiale
+
+[Install]
+WantedBy=multi-user.target

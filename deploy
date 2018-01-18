@@ -1,0 +1,17 @@
+#!/bin/sh
+
+cp -f ankhiale.py /usr/local/bin/ankhiale
+chmod 0555 /usr/local/bin/ankhiale
+
+cp -f DS1621.py /usr/local/bin/
+chmod 0444 /usr/local/bin/DS1621.py
+
+cp -f ankhiale_alarm.mp3 /usr/local/bin/
+chmod 0444 /usr/local/bin/ankhiale_alarm.mp3
+
+grep -q ankhiale /etc/passwd || useradd -M -N -G audio,i2c,gpio,netdev ankhiale  
+
+cp -f ankhiale.service /lib/systemd/system/ankhiale.service
+chmod 0644 /lib/systemd/system/ankhiale.service
+systemctl daemon-reload
+systemctl enable ankhiale.service

@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python -u
 # -*- coding: utf-8 -*-
 
 from __future__ import division # to calculate a float from integers
@@ -15,7 +15,7 @@ def farenheit_to_celsius(degreesF):
 
 
 def play_sound(path):
-    print "INFO: Playing sound file: {}".format(path)
+    print "<6>Playing sound file: {}".format(path)
     subprocess.call(['/usr/bin/mpg123', '-q', path])
 
 
@@ -34,22 +34,27 @@ def parse_args():
     parser.add_argument("--alarm", action="store_true",
                         help="Play alarm sound when temperature is out of desired range")
     parser.add_argument("--high-temp-sound", dest="highTempSound",
-                        default="{}/alarm.mp3".format(os.path.dirname(os.path.realpath(__file__))),
+                        default="{}/ankhiale_alarm.mp3".format(os.path.dirname(os.path.realpath(__file__))),
                         help="Audio file for high temperature alarm")
     parser.add_argument("--low-temp-sound", dest="lowTempSound",
-                        default="{}/alarm.mp3".format(os.path.dirname(os.path.realpath(__file__))),
+                        default="{}/ankhiale_alarm.mp3".format(os.path.dirname(os.path.realpath(__file__))),
                         help="Audio file for low temperature alarm")
     parser.add_argument("--min-temp", dest="minTemp", type=float, default=68.0,
                         help="Minimum temperature, in degrees Farenheit")
     parser.add_argument("--max-temp", dest="maxTemp", type=float, default=78.0,
                         help="Maximum temperature, in degrees Farenheit")
-    parser.add_argument("--hysteresis", type=float, default=1,
+    parser.add_argument("--hysteresis", type=float, default=2,
                         help="Temperature change required before stopping heater/cooler connected to thermostat")
+
+    if not len(sys.argv) > 1:
+        parser.print_help()
+        sys.exit(1)
+
     return parser.parse_args()
 
 
 def configure(args, i2cBus, Heater, Cooler):
-    print "INFO: Configuring thermostats..."
+    print "<6>Configuring thermostats..."
 
     # First reading after startup is not usable, only wakes the devices up.
     ds.wake_up(i2cBus, Heater)
@@ -76,20 +81,16 @@ def configure(args, i2cBus, Heater, Cooler):
 
     # print settings
     #ds.read_config(i2cBus, Heater)  # this output can be confusing
-    heaterSettings = "\n\tHeater on: {} F\n\tHeater off: {} F"
+    heaterSettings = "<6>Heater activation:    on: {} F    off: {} F"
     #get_thermostat returns low_therm, hi_therm
     print heaterSettings.format(*map(celsius_to_farenheit, ds.get_thermostat(i2cBus, Heater)))
 
     #ds.read_config(i2cBus, Cooler)  # this output can be confusing
-    coolerSettings = "\n\tCooler off: {} F\n\tCooler on: {} F"
+    coolerSettings = "<6>Cooler activation:    off: {} F    on: {} F"
     print coolerSettings.format(*map(celsius_to_farenheit, ds.get_thermostat(i2cBus, Cooler)))
-    print
 
 
 def main():
-    if not len(sys.argv) > 1:
-        parser.print_help()
-        sys.exit(1)
     args = parse_args()
 
     # must instantiate the bus.
@@ -104,11 +105,11 @@ def main():
     if args.configure:
         configure(args, i2cBus, Heater, Cooler)
     else:
-        print "WARN: assuming thermostats are already configured"
+        print "<5>assuming thermostats are already configured"
 
     readFunc = ds.read_degreesC_continous # misspelled in library
     if args.start == "continuous":
-        print "INFO: activating thermostats for continuous operation..."
+        print "<6>activating thermostats for continuous operation..."
         # set continuous measurement mode and start converting
         ds.set_mode(i2cBus, Heater, "Continuous")
         ds.set_mode(i2cBus, Cooler, "Continuous")
@@ -117,7 +118,7 @@ def main():
     elif args.start == "oneshot":
         readFunc = ds.read_degreesC_all_oneshot
     else:
-        print "WARN: assuming thermostats already operating continuously"
+        print "<5>assuming thermostats already operating continuously"
 
     iterations = 1
     if args.poll:
@@ -134,7 +135,7 @@ def main():
         lowTempAlarm = heaterReading < args.minTemp
 
         avgReading = (heaterReading + coolerReading) / 2
-        print '{}"Timestamp": "{}", "HeaterTemp": {}, "CoolerTemp": {}, "AverageTemp": {}, "TempUnit": {}, "HighTempAlarm": {}, "LowTempAlarm": {}{}'.format(
+        print '<6>{}"Timestamp": "{}", "HeaterTemp": {}, "CoolerTemp": {}, "AverageTemp": {}, "TempUnit": {}, "HighTempAlarm": {}, "LowTempAlarm": {}{}'.format(
             "{",
             datetime.datetime.now().isoformat(),
             heaterReading,
@@ -155,7 +156,7 @@ def main():
             time.sleep(args.poll)
 
     if args.stop:
-        print "INFO: stopping continuous operation"
+        print "<6>stopping continuous operation"
         ds.stop_conversion(i2cBus, Heater)
         ds.stop_conversion(i2cBus, Cooler)
 
