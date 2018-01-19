@@ -9,6 +9,8 @@ StandardOutput=journal+console
 StandardError=journal+console
 SyslogIdentifier=ankhiale
 User=ankhiale
+Restart=always
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target

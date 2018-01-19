@@ -15,3 +15,4 @@ cp -f ankhiale.service /lib/systemd/system/ankhiale.service
 chmod 0644 /lib/systemd/system/ankhiale.service
 systemctl daemon-reload
 systemctl enable ankhiale.service
+systemctl restart ankhiale
