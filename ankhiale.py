@@ -57,6 +57,7 @@ def configure(args, i2cBus, Heater, Cooler):
     print "<6>Configuring thermostats..."
 
     # First reading after startup is not usable, only wakes the devices up.
+    # This will raise an exception if the device is not reachable.
     ds.wake_up(i2cBus, Heater)
     ds.wake_up(i2cBus, Cooler)
 
@@ -90,6 +91,18 @@ def configure(args, i2cBus, Heater, Cooler):
     print coolerSettings.format(*map(celsius_to_farenheit, ds.get_thermostat(i2cBus, Cooler)))
 
 
+def withRetryZeroReading(readFunc):
+    def retryZeroReading(i2cBus, i2cDevice):
+        [wholeDeg, halfDeg, highRes] = readFunc(i2cBus, i2cDevice)
+        if wholeDeg == 0:
+            # From what I have seen, this is a transient error, unlike the i2c device disappearing.
+            print "Bad reading; will retry in 1s"
+            time.sleep(1.0)
+            [wholeDeg, halfDeg, highRes] = readFunc()
+        return [wholeDeg, halfDeg, highRes]
+    return retryZeroReading
+
+
 def main():
     args = parse_args()
 
@@ -119,6 +132,8 @@ def main():
         readFunc = ds.read_degreesC_all_oneshot
     else:
         print "<5>assuming thermostats already operating continuously"
+
+    readFunc = withRetryZeroReading(readFunc)
 
     iterations = 1
     if args.poll:
